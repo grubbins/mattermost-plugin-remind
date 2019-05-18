@@ -14,6 +14,8 @@ const botName = "remindbot"
 const botDisplayName = "Remindbot"
 
 func (p *Plugin) checkServerVersion() error {
+	p.API.LogInfo("checkServerVersion")
+
 	serverVersion, err := semver.Parse(p.API.GetServerVersion())
 	if err != nil {
 		return errors.Wrap(err, "failed to parse server version")
@@ -28,25 +30,31 @@ func (p *Plugin) checkServerVersion() error {
 }
 
 func (p *Plugin) OnActivate() error {
+	p.API.LogInfo("BEGIN OnActivate")
 	if err := p.checkServerVersion(); err != nil {
 		return err
 	}
 
+	p.API.LogInfo("p.API.GetTeams")
 	teams, err := p.API.GetTeams()
 	if err != nil {
 		return errors.Wrap(err, "failed to query teams OnActivate")
 	}
 
+	p.API.LogInfo("p.InitAPI")
 	p.router = p.InitAPI()
 
+	p.API.LogInfo("p.ensureBotExists")
 	p.ensureBotExists()
 
+	p.API.LogInfo("p.registerCommand")
 	for _, team := range teams {
 		if err := p.registerCommand(team.Id); err != nil {
 			return errors.Wrap(err, "failed to register command")
 		}
 	}
 
+	p.API.LogInfo("p.TranslationsPreInit")
 	if err := TranslationsPreInit(); err != nil {
 		return errors.Wrap(err, "failed to initialize translations OnActivate message")
 	}
@@ -54,8 +62,10 @@ func (p *Plugin) OnActivate() error {
 	p.emptyTime = time.Time{}.AddDate(1, 1, 1)
 	p.supportedLocales = []string{"en"}
 
+	p.API.LogInfo("p.Run")
 	p.Run()
 
+	p.API.LogInfo("END OnActivate")
 	return nil
 }
 
